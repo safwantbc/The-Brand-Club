@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TBC Calculator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    .container { background: #fff; padding: 24px; border-radius: 8px; max-width: 480px; margin: auto; box-shadow: 0 2px 8px #ddd; }
+    .logo-title { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+    .logo-title h2 { margin: 0; font-size: 2rem; font-weight: bold; letter-spacing: 1px; }
+    label { display: block; margin-bottom: 8px; }
+    .section-title { font-weight: bold; margin-bottom: 6px; margin-top: 18px; }
+    .row-flex { display: flex; gap: 12px; align-items: center; }
+    .row-flex input[type="number"] { flex: 2; margin-bottom: 0; }
+    .row-flex select { flex: 1; margin-bottom: 0; }
+    input[type="number"], select { width: 100%; padding: 8px; margin-bottom: 16px; box-sizing: border-box; }
+    .shipping-options { margin-bottom: 16px; }
+    .shipping-options label { display: inline-block; margin-right: 20px; }
+    .exchange-rates { background: #f9f9f9; border-radius: 6px; padding: 10px 16px; margin-bottom: 20px; }
+    .exchange-rates label { display: inline-block; width: 100px; margin-bottom: 5px; }
+    .exchange-rates input { width: 90px; display: inline-block; }
+    .shipping-rates { background: #f4faff; border-radius: 6px; padding: 10px 16px; margin-bottom: 20px;}
+    .shipping-rates label { display: inline-block; width: 120px; margin-bottom: 5px;}
+    .shipping-rates input, .shipping-rates select { width: 90px; display: inline-block;}
+    button { padding: 10px 20px; font-size: 16px; }
+    .result { margin-top: 24px; font-size: 18px; min-height: 40px;}
+    .final-price-box {
+      background: #e8ffe8;
+      border: 2px solid #34a853;
+      color: #228b22;
+      border-radius: 8px;
+      font-size: 1.5em;
+      font-weight: bold;
+      margin: 16px 0 12px 0;
+      padding: 18px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px #bde5bd;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 8px; max-width: 100%; }
+      .logo-title h2 { font-size: 1.3rem; }
+      .exchange-rates label, .shipping-rates label { width: 70px; }
+      .exchange-rates input, .shipping-rates input, .shipping-rates select { width: 70px; }
+      .final-price-box { font-size: 1.1em; padding: 10px 0; }
+      .row-flex { flex-direction: column; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-title">
+      <h2>TBC Calculator</h2>
+    </div>
+    <form id="calcForm">
+      <div class="section-title">Item Cost</div>
+      <div class="row-flex">
+        <input type="number" id="cost" required min="0" step="0.01" placeholder="Item Cost">
+        <select id="currency" required>
+          <option value="AED">AED</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="PKR" selected>PKR</option>
+        </select>
+      </div>
+
+      <div class="section-title">Profit Margin <span style="font-weight:normal;">(%)</span></div>
+      <input type="number" id="profit" required min="0" step="0.01" value="20" placeholder="Profit Margin (%)">
+
+      <div class="section-title">Exchange Rates to PKR</div>
+      <div class="exchange-rates">
+        <label for="rateAED">1 AED = </label>
+        <input type="number" id="rateAED" value="80" min="0" step="0.01"> PKR<br>
+        <label for="rateUSD">1 USD = </label>
+        <input type="number" id="rateUSD" value="284" min="0" step="0.01"> PKR<br>
+        <label for="rateGBP">1 GBP = </label>
+        <input type="number" id="rateGBP" value="379" min="0" step="0.01"> PKR
+      </div>
+
+      <div class="section-title">Item Weight</div>
+      <input type="number" id="weight" required min="0" step="0.01" placeholder="Item Weight (Kg)">
+
+      <div class="section-title">Type of Shipping</div>
+      <div class="shipping-options">
+        <label>
+          <input type="radio" name="shipping" value="sea" checked> Sea Shipping
+        </label>
+        <label>
+          <input type="radio" name="shipping" value="air"> Air Shipping
+        </label>
+      </div>
+
+      <div class="section-title">Shipping Rate per Kg</div>
+      <div class="shipping-rates">
+        <label for="seaRate">Sea Rate:</label>
+        <input type="number" id="seaRate" value="10" min="0" step="0.01">
+        <select id="seaRateCurrency">
+          <option value="PKR">PKR</option>
+          <option value="AED">AED</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+        </select><br>
+        <label for="airRate">Air Rate:</label>
+        <input type="number" id="airRate" value="100" min="0" step="0.01">
+        <select id="airRateCurrency">
+          <option value="PKR">PKR</option>
+          <option value="AED">AED</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+        </select>
+      </div>
+
+      <button type="submit">Calculate Total Price</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    function getExchangeRate(currency, rates) {
+      switch (currency) {
+        case "AED": return rates.AED;
+        case "USD": return rates.USD;
+        case "GBP": return rates.GBP;
+        case "PKR": return 1;
+        default: return 1;
+      }
+    }
+
+    // Currency formatter for PKR
+    function formatPKR(value) {
+      return value.toLocaleString('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 2 });
+    }
+
+    document.getElementById('calcForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const cost = parseFloat(document.getElementById('cost').value);
+      const currency = document.getElementById('currency').value;
+      const weight = parseFloat(document.getElementById('weight').value);
+      const shippingType = document.querySelector('input[name="shipping"]:checked').value;
+      const profitMargin = parseFloat(document.getElementById('profit').value);
+
+      const rateAED = parseFloat(document.getElementById('rateAED').value);
+      const rateUSD = parseFloat(document.getElementById('rateUSD').value);
+      const rateGBP = parseFloat(document.getElementById('rateGBP').value);
+
+      const seaRate = parseFloat(document.getElementById('seaRate').value);
+      const seaRateCurrency = document.getElementById('seaRateCurrency').value;
+      const airRate = parseFloat(document.getElementById('airRate').value);
+      const airRateCurrency = document.getElementById('airRateCurrency').value;
+
+      // Validate inputs
+      if (
+        isNaN(cost) || isNaN(weight) || isNaN(profitMargin) ||
+        isNaN(rateAED) || isNaN(rateUSD) || isNaN(rateGBP) ||
+        isNaN(seaRate) || isNaN(airRate) ||
+        cost < 0 || weight < 0 || profitMargin < 0 ||
+        rateAED <= 0 || rateUSD <= 0 || rateGBP <= 0 ||
+        seaRate < 0 || airRate < 0
+      ) {
+        document.getElementById('result').textContent = "Please enter valid values.";
+        return;
+      }
+
+      const exchangeRates = { AED: rateAED, USD: rateUSD, GBP: rateGBP };
+
+      // Convert item cost to PKR
+      const costPKR = cost * getExchangeRate(currency, exchangeRates);
+
+      // Get selected shipping rate and convert to PKR
+      let shippingRate = 0;
+      let shippingRateInput = 0;
+      let shippingRateCurrency = "PKR";
+      if (shippingType === "sea") {
+        shippingRateInput = seaRate;
+        shippingRateCurrency = seaRateCurrency;
+      } else {
+        shippingRateInput = airRate;
+        shippingRateCurrency = airRateCurrency;
+      }
+      shippingRate = shippingRateInput * getExchangeRate(shippingRateCurrency, exchangeRates);
+
+      // Calculate shipping cost and final price
+      const shippingCost = weight * shippingRate;
+      const costWithProfit = costPKR * (1 + profitMargin / 100);
+      const total = costWithProfit + shippingCost;
+
+      // Output details with currency formatting, final price in a box
+      document.getElementById('result').innerHTML = `
+        <div class="final-price-box">
+          Total Price: ${formatPKR(total)}
+        </div>
+        (Cost with Profit: ${formatPKR(costWithProfit)} + Shipping: ${formatPKR(shippingCost)})<br>
+        <small>Item Cost: ${cost} ${currency} × rate = ${formatPKR(costPKR)}<br>
+        Shipping Rate: ${shippingRateInput} ${shippingRateCurrency}/Kg × rate = ${formatPKR(shippingRate)}/Kg</small>
+      `;
+    });
+  </script>
+</body>
+</html>
